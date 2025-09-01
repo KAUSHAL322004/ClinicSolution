@@ -1,0 +1,103 @@
+﻿@page "/doctors"
+@inject HttpClient Http
+
+<h3 class="mb-3">Doctors</h3>
+
+<!-- Add Doctor Form -->
+<EditForm Model="newDoctor" OnValidSubmit="AddDoctor">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="mb-3">
+        <label>First Name:</label>
+        <InputText class="form-control" @bind-Value="newDoctor.FirstName" />
+    </div>
+
+    <div class="mb-3">
+        <label>Last Name:</label>
+        <InputText class="form-control" @bind-Value="newDoctor.LastName" />
+    </div>
+
+    <div class="mb-3">
+        <label>Specialization:</label>
+        <InputText class="form-control" @bind-Value="newDoctor.Specialization" />
+    </div>
+
+    <div class="mb-3">
+        <label>Phone:</label>
+        <InputText class="form-control" @bind-Value="newDoctor.Phone" />
+    </div>
+
+    <div class="mb-3">
+        <label>Email:</label>
+        <InputText class="form-control" @bind-Value="newDoctor.Email" />
+    </div>
+
+    <button type="submit" class="btn btn-primary">Add Doctor</button>
+</EditForm>
+
+<hr />
+
+<!-- Show Doctor List -->
+@if (doctors == null)
+{
+    <p>Loading...</p>
+}
+else
+{
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Id</th>
+                <th>Name</th>
+                <th>Specialization</th>
+                <th>Phone</th>
+                <th>Email</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var d in doctors)
+            {
+                <tr>
+                    <td>@d.DoctorId</td>
+                    <td>@d.FirstName @d.LastName</td>
+                    <td>@d.Specialization</td>
+                    <td>@d.Phone</td>
+                    <td>@d.Email</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    List<Doctor>? doctors;
+    Doctor newDoctor = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        doctors = await Http.GetFromJsonAsync<List<Doctor>>("api/doctors");
+    }
+
+    private async Task AddDoctor()
+    {
+        var response = await Http.PostAsJsonAsync("api/doctors", newDoctor);
+
+        if (response.IsSuccessStatusCode)
+        {
+            // Refresh list
+            doctors = await Http.GetFromJsonAsync<List<Doctor>>("api/doctors");
+            newDoctor = new(); // reset form
+        }
+    }
+
+    public class Doctor
+    {
+        public int DoctorId { get; set; }
+        public string FirstName { get; set; } = string.Empty;
+        public string LastName { get; set; } = string.Empty;
+        public string Specialization { get; set; } = string.Empty;
+        public string Phone { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
+    }
+}

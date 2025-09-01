@@ -1,0 +1,145 @@
+﻿@page "/medical-records"
+@inject HttpClient Http
+
+<h3 class="mb-3">Medical Records</h3>
+
+<!-- Add New Medical Record -->
+<EditForm Model="newRecord" OnValidSubmit="AddRecord">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="mb-3">
+        <label>Patient:</label>
+        <select class="form-control" @bind="newRecord.PatientId">
+            <option value="">-- Select Patient --</option>
+            @if (patients != null)
+            {
+                @foreach (var p in patients)
+                {
+                    <option value="@p.PatientId">@p.FirstName @p.LastName</option>
+                }
+            }
+        </select>
+    </div>
+
+    <div class="mb-3">
+        <label>Doctor:</label>
+        <select class="form-control" @bind="newRecord.DoctorId">
+            <option value="">-- Select Doctor --</option>
+            @if (doctors != null)
+            {
+                @foreach (var d in doctors)
+                {
+                    <option value="@d.DoctorId">@d.FirstName @d.LastName (@d.Specialization)</option>
+                }
+            }
+        </select>
+    </div>
+
+    <div class="mb-3">
+        <label>Diagnosis:</label>
+        <InputText class="form-control" @bind-Value="newRecord.Diagnosis" />
+    </div>
+
+    <div class="mb-3">
+        <label>Treatment:</label>
+        <InputText class="form-control" @bind-Value="newRecord.Treatment" />
+    </div>
+
+    <div class="mb-3">
+        <label>Date:</label>
+        <InputDate class="form-control" @bind-Value="newRecord.RecordDate" />
+    </div>
+
+    <button type="submit" class="btn btn-success">Save Record</button>
+</EditForm>
+
+<hr />
+
+<!-- Show Records List -->
+@if (records == null)
+{
+    <p>Loading...</p>
+}
+else
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Id</th>
+                <th>Patient</th>
+                <th>Doctor</th>
+                <th>Diagnosis</th>
+                <th>Treatment</th>
+                <th>Date</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var r in records)
+            {
+                <tr>
+                    <td>@r.RecordId</td>
+                    <td>@r.PatientName</td>
+                    <td>@r.DoctorName</td>
+                    <td>@r.Diagnosis</td>
+                    <td>@r.Treatment</td>
+                    <td>@r.RecordDate.ToShortDateString()</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    List<MedicalRecord>? records;
+    List<Patient>? patients;
+    List<Doctor>? doctors;
+
+    MedicalRecord newRecord = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        patients = await Http.GetFromJsonAsync<List<Patient>>("api/patients");
+        doctors = await Http.GetFromJsonAsync<List<Doctor>>("api/doctors");
+        List<MedicalRecords> medicalRecords = await Http.GetFromJsonAsync<List<MedicalRecords>>("api/medicalrecords");
+    }
+
+    private async Task AddRecord()
+    {
+        var response = await Http.PostAsJsonAsync("api/medicalrecords", newRecord);
+
+        if (response.IsSuccessStatusCode)
+        {
+            List<MedicalRecords> medicalRecords = await Http.GetFromJsonAsync<List<MedicalRecords>>("api/medicalrecords");
+            newRecord = new(); // reset form
+        }
+    }
+
+    public class MedicalRecord
+    {
+        public int RecordId { get; set; }
+        public int PatientId { get; set; }
+        public int DoctorId { get; set; }
+        public string Diagnosis { get; set; } = string.Empty;
+        public string Treatment { get; set; } = string.Empty;
+        public DateTime RecordDate { get; set; }
+
+        public string PatientName { get; set; } = string.Empty;
+        public string DoctorName { get; set; } = string.Empty;
+    }
+
+    public class Patient
+    {
+        public int PatientId { get; set; }
+        public string FirstName { get; set; } = string.Empty;
+        public string LastName { get; set; } = string.Empty;
+    }
+
+    public class Doctor
+    {
+        public int DoctorId { get; set; }
+        public string FirstName { get; set; } = string.Empty;
+        public string LastName { get; set; } = string.Empty;
+        public string Specialization { get; set; } = string.Empty;
+    }
+}

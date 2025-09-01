@@ -1,0 +1,98 @@
+﻿@using ClinicApp.Shared.Models
+@using ClinicApp.Shared.Abstractions
+@inject IPatientApi Api
+
+<h3>Patient</h3>
+
+@if (loading)
+{
+    <p>Loading...</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>First</th>
+                <th>Last</th>
+                <th>Phone</th>
+                <th>Email</th>
+                <th>DOB</th>
+            </tr>
+        </thead>
+   <tbody>
+      @foreach (var p in patients)
+      {
+         <tr>
+              <td>@p.FirstName</td>
+              <td>@p.LastName</td>
+              <td>@p.Phone</td>
+              <td>@p.Email</td>
+              <td>@(p.Dob?.ToString("yyyy-MM-dd"))</td>
+         </tr>
+       }
+   </tbody>
+</table>
+}
+
+
+<hr />
+
+<h4>Add New Patient</h4>
+
+<EditForm Model="newPatient" OnValidSubmit="Save">
+<DataAnnotationsValidator />
+<div class="mb-2">
+    <input class="form-control" placeholder="First name" @bind-value="newPatient.FirstName" required />
+</div>
+<div class="mb-2">
+    <input class="form-control" placeholder="Last name" @bind-value="newPatient.LastName" required />
+</div>
+<div class="mb-2">
+    <input class="form-control" placeholder="Phone" @bind-value="newPatient.Phone" />
+</div>
+<div class="mb-2">
+    <input type="email" class="form-control" placeholder="Email" @bind-value="newPatient.Email" />
+</div>
+      <div class="mb-2">
+             <input type="date" 
+             class="form-control"
+             @bind-value="dobString" />
+      </div>
+
+<button class="btn btn-primary" type="submit">Save</button>
+
+</EditForm>
+
+@code
+{
+    private List<PatientDto> patients = new();
+    private PatientDto newPatient = new();
+    private bool loading = true;
+    private DateTime dobString;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Load();
+    }
+
+
+    private async Task Load()
+    {
+        loading = true;
+        patients = await Api.GetAllAsync();
+        loading = false;
+        StateHasChanged();
+    }
+
+
+    private async Task Save()
+    {
+        newPatient.Dob = dobString.Year < 1900 ? null : dobString;
+        await Api.CreateAsync(newPatient);
+            newPatient = new();
+            // dobString =;
+            await Load();
+    }
+}

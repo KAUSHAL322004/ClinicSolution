@@ -1,0 +1,103 @@
+﻿@page "/patients"
+@inject HttpClient Http
+
+<h3 class="mb-3">Patients</h3>
+
+<!-- Add Patient Form -->
+<EditForm Model="newPatient" OnValidSubmit="AddPatient">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="mb-3">
+        <label>First Name:</label>
+        <InputText class="form-control" @bind-Value="newPatient.FirstName" />
+    </div>
+
+    <div class="mb-3">
+        <label>Last Name:</label>
+        <InputText class="form-control" @bind-Value="newPatient.LastName" />
+    </div>
+
+    <div class="mb-3">
+        <label>Date of Birth:</label>
+        <InputDate class="form-control" @bind-Value="newPatient.DateOfBirth" />
+    </div>
+
+    <div class="mb-3">
+        <label>Phone:</label>
+        <InputText class="form-control" @bind-Value="newPatient.Phone" />
+    </div>
+
+    <div class="mb-3">
+        <label>Email:</label>
+        <InputText class="form-control" @bind-Value="newPatient.Email" />
+    </div>
+
+    <button type="submit" class="btn btn-primary">Add Patient</button>
+</EditForm>
+
+<hr />
+
+<!-- Show Patient List -->
+@if (patients == null)
+{
+    <p>Loading...</p>
+}
+else
+{
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Id</th>
+                <th>Name</th>
+                <th>DOB</th>
+                <th>Phone</th>
+                <th>Email</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var p in patients)
+            {
+                <tr>
+                    <td>@p.PatientId</td>
+                    <td>@p.FirstName @p.LastName</td>
+                    <td>@p.DateOfBirth.ToShortDateString()</td>
+                    <td>@p.Phone</td>
+                    <td>@p.Email</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    List<Patient>? patients;
+    Patient newPatient = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        patients = await Http.GetFromJsonAsync<List<Patient>>("api/patients");
+    }
+
+    private async Task AddPatient()
+    {
+        var response = await Http.PostAsJsonAsync("api/patients", newPatient);
+
+        if (response.IsSuccessStatusCode)
+        {
+            // Refresh list
+            patients = await Http.GetFromJsonAsync<List<Patient>>("api/patients");
+            newPatient = new(); // reset form
+        }
+    }
+
+    public class Patient
+    {
+        public int PatientId { get; set; }
+        public string FirstName { get; set; } = string.Empty;
+        public string LastName { get; set; } = string.Empty;
+        public DateTime DateOfBirth { get; set; } = DateTime.Now;
+        public string Phone { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
+    }
+}

@@ -1,0 +1,66 @@
+﻿@page "/dashboard"
+@inject HttpClient Http
+
+<h3 class="mb-4">Clinic Dashboard</h3>
+
+@if (stats == null)
+{
+    <p>Loading...</p>
+}
+else
+{
+    <div class="row">
+        <div class="col-md-3 mb-3">
+            <div class="card text-white bg-primary">
+                <div class="card-body">
+                    <h5 class="card-title">Patients</h5>
+                    <p class="card-text display-6">@stats.TotalPatients</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3 mb-3">
+            <div class="card text-white bg-success">
+                <div class="card-body">
+                    <h5 class="card-title">Doctors</h5>
+                    <p class="card-text display-6">@stats.TotalDoctors</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3 mb-3">
+            <div class="card text-white bg-warning">
+                <div class="card-body">
+                    <h5 class="card-title">Appointments</h5>
+                    <p class="card-text display-6">@stats.UpcomingAppointments</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3 mb-3">
+            <div class="card text-white bg-danger">
+                <div class="card-body">
+                    <h5 class="card-title">Medical Records</h5>
+                    <p class="card-text display-6">@stats.RecentRecords</p>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    DashboardStats? stats;
+
+    protected override async Task OnInitializedAsync()
+    {
+        stats = await Http.GetFromJsonAsync<DashboardStats>("api/dashboard");
+    }
+
+    public class DashboardStats
+    {
+        public int TotalPatients { get; set; }
+        public int TotalDoctors { get; set; }
+        public int UpcomingAppointments { get; set; }
+        public int RecentRecords { get; set; }
+    }
+}
