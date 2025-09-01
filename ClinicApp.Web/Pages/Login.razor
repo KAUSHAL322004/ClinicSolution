@@ -9,7 +9,7 @@
     <EditForm Model="@loginModel" OnValidSubmit="HandleLogin">
         <DataAnnotationsValidator />
         <ValidationSummary />
-
+         
         <div class="mb-3">
             <label>Username</label>
             <InputText @bind-Value="loginModel.Username" class="form-control" />
