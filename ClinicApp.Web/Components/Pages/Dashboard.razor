@@ -1,4 +1,6 @@
 ﻿@page "/dashboard"
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize]
 @inject HttpClient Http
 
 <h3 class="mb-4">Clinic Dashboard</h3>
@@ -48,12 +50,27 @@ else
     </div>
 }
 
+<p>@message</p>
+
 @code {
     DashboardStats? stats;
+    private string message = "Loading...";
 
     protected override async Task OnInitializedAsync()
     {
+        // Load dashboard stats
         stats = await Http.GetFromJsonAsync<DashboardStats>("api/dashboard");
+
+        // Try to call secure API
+        try
+        {
+            // This API requires JWT token
+            message = await Http.GetStringAsync("api/secure/hello");
+        }
+        catch
+        {
+            message = "Failed to call secure API!";
+        }
     }
 
     public class DashboardStats

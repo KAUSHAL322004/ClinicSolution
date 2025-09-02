@@ -1,0 +1,72 @@
+﻿@page "/login"
+@using Microsoft.AspNetCore.Components.Authorization
+@inject NavigationManager Nav
+@inject HttpClient Http
+@inject Blazored.LocalStorage.ILocalStorageService LocalStorage
+@inject AuthenticationStateProvider AuthState
+
+<h3>Login</h3>
+
+<input @bind="Username" placeholder="Username" />
+<input @bind="Password" type="password" placeholder="Password" />
+<button @onclick="DoLogin" disabled="@_busy">@( _busy ? "Logining in..." : "Login")</button>
+
+<p style="color:red">@_error</p>
+
+@code{
+
+    private string Username { get; set; } = "";
+    private string Password { get; set; } = "";
+    private bool _busy;
+    private string? _error;
+
+    private async Task DoLogin()
+    {
+        _error = null;
+        _busy = true;
+        try
+        {
+            var resp = await Http.PostAsJsonAsync("api/auth/login", new { Username, Password });
+            if (resp.IsSuccessStatusCode)
+            {
+                var token = await resp.Content.ReadAsStringAsync();
+                await LocalStorage.SetItemAsync("authToken", token);
+                ((AuthStateProvider)AuthState).NotifyUserAuthentication(token);
+                Nav.NavigateTo("/dashboard", forceLoad: true);
+            }
+            else
+            {
+                _error = "Invalid username or password.";
+            }
+        }
+        catch
+        {
+            _error = "Server unreachable. Check API URL/port.";
+        }
+        finally
+        {
+            _busy = false;
+        }
+
+        if (resp.IsSuccessStatusCode)
+        {
+            var result = await resp.Content.ReadFromJsonAsync<TokenResponse>();
+
+            await LocalStorage.SetItemAsync("authToken", result!.AccessToken);
+            await LocalStorage.SetItemAsync("refreshToken", result!.RefreshToken);
+
+            ((AuthStateProvider)AuthState).NotifyUserAuthentication(result!.AccessToken);
+
+            Nav.NavigateTo("/dashboard", forceLoad: true);
+        }
+    }
+        public class TokenResponse
+    {
+        public string AccessToken { get; set; }
+        public string RefreshToken { get; set; }
+    }
+
+
+    }
+
+}

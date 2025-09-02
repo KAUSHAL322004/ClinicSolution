@@ -18,4 +18,11 @@ namespace ClinicApp.API.Data
         public DbSet<MedicalRecord> MedicalRecords { get; set; }
         public DbSet<User> Users { get; set; }
     }
+
+    public class AppDbContext : DbContext
+    {
+        public AppDbContext(DbContextOptions<ApplicationDbContext> options) : base(options) { }
+        public DbSet<User> Users { get; set; }
+    }
+
 }

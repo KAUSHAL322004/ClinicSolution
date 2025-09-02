@@ -1,4 +1,36 @@
 ﻿@inherits LayoutComponentBase
+@inject Blazored.LocalStorage.ILocalStorageService LocalStorage
+@inject NavigationManager Nav
+@inject AuthenticationStateProvider AuthState
+@using Microsoft.AspNetCore.Components.Authorization    
+
+
+<AuthorizeView>
+    <Authorized>
+        <button @onclick="Logout">Logout</button>
+    </Authorized>
+    <NotAuthorized>
+        <a href="/login">Login</a>
+    </NotAuthorized>
+</AuthorizeView>
+
+<AuthorizeView>
+    <Authorized>
+        <p>Welcome, @context.User.Identity?.Name!</p>
+        <p>
+            Your role:
+            @string.Join(", ", context.User.Claims
+                        .Where(c => c.Type == "role")
+                        .Select(c => c.Value))
+        </p>
+    </Authorized>
+    <NotAuthorized>
+        <p>You are not logged in.</p>
+    </NotAuthorized>
+</AuthorizeView>
+
+
+
 <div class="page">
     <div class="sidebar">
         <NavMenu />
@@ -14,3 +46,12 @@
         </article>
     </main>
 </div>
+
+@code {
+    private async Task Logout()
+    {
+        await LocalStorage.RemoveItemAsync("authToken");
+        ((AuthStateProvider)AuthState).NotifyUserLogout();
+        Nav.NavigateTo("/login", forceLoad: true);
+    }
+}
