@@ -1,0 +1,29 @@
+﻿@page "/fetchdata"
+ this
+ @inject IHttpClientFactory ClientFactory
+
+<h3>Secure Data</h3>
+
+<ul>
+    @if (items == null)
+    {
+        <li>Loading...</li>
+    }
+    else
+    {
+        @foreach (var i in items)
+        {
+            <li>@i</li>
+        }
+    }
+</ul>
+
+@code {
+    private List<string> items;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var client = ClientFactory.CreateClient("AuthAPI");
+        items = await client.GetFromJsonAsync<List<string>>("api/securedata");
+    }
+}

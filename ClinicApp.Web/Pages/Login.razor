@@ -65,6 +65,10 @@
 
     public class LoginResponse
     {
-        public string Token { get; set; } = string.Empty;
-    }
+            internal string AccessToken;
+
+            public string Token { get; set; } = string.Empty;
+            public string AccessToken { get; internal set; }
+                public string AccessToken { get; internal set; }
+        }
 }

@@ -67,21 +67,57 @@ namespace ClinicApp.API.Controllers
                 _jwt = jwt;
             }
 
-            [HttpPost("login")]
-            public IActionResult Login([FromBody] LoginRequest request)
+        [HttpPost("login")]
+        public IActionResult Login([FromBody] LoginModel model)
+        {
+            // ✅ Validate user (check username + password)
+            if (model.Username == "admin" && model.Password == "123")
             {
-                // TODO: Replace with real user validation
-                if (request.Username == "admin" && request.Password == "password")
-                {
-                    var token = _jwt.GenerateToken(request.Username, "Admin");
-                    return Ok(new { Token = token });
-                }
+                var accessToken = GenerateJwtToken("admin", "Admin"); // expires in ~15 min
+                var refreshToken = Guid.NewGuid().ToString(); // generate random refresh token
 
-                return Unauthorized();
+                // Save refresh token in DB or in-memory (for demo, just return it)
+                return Ok(new
+                {
+                    AccessToken = accessToken,
+                    RefreshToken = refreshToken
+                });
             }
-        
+
+            return Unauthorized();
+        }
+
+        [HttpPost("refresh")]
+        public IActionResult Refresh([FromBody] RefreshRequest request)
+        {
+            // Normally: validate refresh token from DB
+            if (string.IsNullOrWhiteSpace(request.RefreshToken))
+                return Unauthorized();
+
+            // Issue new access token
+            var newAccessToken = GenerateJwtToken("admin", "Admin");
+
+            return Ok(new { AccessToken = newAccessToken });
+        }
+
+        public class RefreshRequest
+        {
+            public string RefreshToken { get; set; }
+        }
+
+
+        private object GenerateJwtToken(string v1, string v2)
+        {
+            throw new NotImplementedException();
+        }
 
         public record LoginRequest(string Username, string Password);
 
+    }
+
+    public class LoginModel
+    {
+        internal string Password;
+        internal string Username;
     }
 }

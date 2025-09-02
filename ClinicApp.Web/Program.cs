@@ -31,6 +31,12 @@ using Blazored.LocalStorage;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Microsoft.AspNetCore.Components.Authorization;
 using ClinicApp.Web;
+using Microsoft.IdentityModel.Tokens;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection;
+
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
@@ -40,16 +46,18 @@ builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.
 
 builder.Services.AddBlazoredLocalStorage();
 builder.Services.AddAuthorizationCore();
+builder.Services.AddScoped<AuthenticationStateProvider, JwtAuthStateProvider>();
 
 // TokenHandler => har API call me JWT chipkane ke liye
 builder.Services.AddScoped<TokenHandler>();
 
+//Add httpClient with Auth handler
+builder.Services.AddTransient<AuthHttpHandler>();
+
 // Named HttpClient for your API
-builder.Services.AddHttpClient("API", c =>
 {
-    c.BaseAddress = new Uri("https://localhost:5001/"); // **yaha apna API URL/port daalo**
-})
-.AddHttpMessageHandler<TokenHandler>();
+    c.BaseAddress = new Uri("https://localhost:7149/"); // **yaha apna API URL/port daalo**
+}
 
 // Resolve default HttpClient as the API client (easy inject)
 builder.Services.AddScoped(sp => sp.GetRequiredService<IHttpClientFactory>().CreateClient("API"));
